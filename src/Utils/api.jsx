@@ -1,8 +1,10 @@
+import axios from "axios";
 const BASE_URL = import.meta.env.VITE_API_URL;
 const AUTH_TOKEN_KEY = "auth_token";
 
 const api = axios.create({
   baseURL: BASE_URL,
+
   // no withCredentials here
 });
 
