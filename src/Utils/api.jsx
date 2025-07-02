@@ -10,42 +10,28 @@ const api = axios.create({
 });
 
 
-const getAuthHeaders = () => {
-  const token = localStorage.getItem(AUTH_TOKEN_KEY);
-  return token ? { Authorization: `Bearer ${token}` } : {};
-};
-
-
 const getCSRFToken = async () => {
   try {
-    await axios.get(`${BASE_URL.replace('/api', '')}/sanctum/csrf-cookie`, {
-
-      withCredentials: true,
-    });
+    await axios.get("/sanctum/csrf-cookie");
   } catch (error) {
     console.error("CSRF cookie error:", error);
     throw new Error("Failed to fetch CSRF token");
   }
 };
 
-
-axios.defaults.withCredentials = true; 
-
-// Login function
+// Login function using cookie-based auth
 export const login = async (credentials) => {
   try {
     console.log("Logging in with credentials:", credentials);
 
-    await getCSRFToken(); 
-    const response = await axios.post(`${BASE_URL}/login`, credentials);
+    await getCSRFToken();
 
-    const { access_token, user } = response.data;
-    if (access_token) {
-      localStorage.setItem(AUTH_TOKEN_KEY, access_token);
-      localStorage.setItem("user_role", user?.role); 
-    }
+    // Post to /login route; Laravel will set auth cookie if success
+    const response = await axios.post("/login", credentials);
 
-    return response.data;
+    // No access_token here, authentication is via cookies automatically sent
+
+    return response.data; // user info, etc
   } catch (error) {
     console.error("Login error:", error.response?.data || error.message);
     throw error.response?.data || error.message;
