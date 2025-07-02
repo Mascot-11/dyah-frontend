@@ -1,76 +1,54 @@
-import axios from "axios";
-
 const BASE_URL = import.meta.env.VITE_API_URL;
 const AUTH_TOKEN_KEY = "auth_token";
-axios.defaults.withCredentials = true;
-// Create axios instance
+
 const api = axios.create({
-  baseURL: `${BASE_URL}`,
-  withCredentials: true, 
+  baseURL: BASE_URL,
+  // no withCredentials here
 });
 
-
-const getCSRFToken = async () => {
-  try {
-    await axios.get("/sanctum/csrf-cookie");
-  } catch (error) {
-    console.error("CSRF cookie error:", error);
-    throw new Error("Failed to fetch CSRF token");
-  }
-};
-
-// Login function using cookie-based auth
+// Login function using token-based auth
 export const login = async (credentials) => {
   try {
-    console.log("Logging in with credentials:", credentials);
+    const response = await api.post("/login", credentials);
 
-    await getCSRFToken();
+    const { access_token, user } = response.data;
 
-    // Post to /login route; Laravel will set auth cookie if success
-    const response = await axios.post("/login", credentials);
+    if (access_token) {
+      localStorage.setItem(AUTH_TOKEN_KEY, access_token);
+      localStorage.setItem("user_role", user?.role);
+    }
 
-    // No access_token here, authentication is via cookies automatically sent
-
-    return response.data; // user info, etc
+    return response.data;
   } catch (error) {
     console.error("Login error:", error.response?.data || error.message);
     throw error.response?.data || error.message;
   }
 };
-
-
 export const register = async (userData) => {
   try {
-    
     const userWithRole = { ...userData, role: userData.role || "user" };
 
-   
-    await getCSRFToken();
+    // No CSRF token call here for token-based auth
 
-    
     const response = await axios.post(
       `${BASE_URL}/register`,
-      userWithRole,
-      {
-        withCredentials: true, 
-      }
+      userWithRole
+      // No withCredentials here either
     );
 
-    
     const { access_token, user } = response.data;
     if (access_token) {
-      localStorage.setItem(AUTH_TOKEN_KEY, access_token); 
-      localStorage.setItem("user_role", user?.role || "user"); 
+      localStorage.setItem(AUTH_TOKEN_KEY, access_token);
+      localStorage.setItem("user_role", user?.role || "user");
     }
 
-    
     return response.data;
   } catch (error) {
-   
     console.error("Registration error:", error.response?.data || error.message);
     throw error.response?.data || error.message;
   }
 };
+
 
 
 export const logout = async (setIsUserLoggedIn) => {
