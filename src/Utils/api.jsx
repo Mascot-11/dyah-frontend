@@ -7,7 +7,16 @@ const api = axios.create({
 
   // no withCredentials here
 });
-
+axios.interceptors.request.use((config) => {
+  const token = localStorage.getItem("auth_token"); // your token key
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  config.headers["Content-Type"] = "application/json";
+  return config;
+}, (error) => {
+  return Promise.reject(error);
+});
 // Login function using token-based auth
 export const login = async (credentials) => {
   try {
