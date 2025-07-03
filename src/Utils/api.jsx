@@ -7,6 +7,13 @@ const api = axios.create({
 
   // no withCredentials here
 });
+const getAuthHeaders = () => {
+  const token = localStorage.getItem("auth_token");
+  return {
+    Authorization: `Bearer ${token}`,
+  };
+};
+
 axios.interceptors.request.use((config) => {
   const token = localStorage.getItem("auth_token"); // your token key
   if (token) {
